@@ -3,6 +3,7 @@ import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '../../../utils/hooks/useDebounce';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -135,9 +136,9 @@ function Login() {
               </button>
             </div>
             <div className='register-container'>
-              <a href='/register'>
-                <small>Register</small>
-              </a>
+              <Link to ="/Register">
+                <small>Don't have an account? Register</small>
+                </Link>
             </div>
           </div>
         </form>

@@ -5,7 +5,8 @@ import './index.css';
 import Login from './pages/Public/Login/Login';
 import Dashboard from './pages/Main/Dashboard/Dashboard';
 import Main from './pages/Main/Main';
-import Register from './pages/Public/Register';
+import Register from './pages/Public/Register/Register';
+
 
 const router = createBrowserRouter([
   {
@@ -13,8 +14,12 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: '/',
-    element: <Register />,
+    path:'/register',
+     element: <Register />,
+  },
+  {
+    path:'/login',
+    element: <Login />,
   },
   {
     path: '/main',

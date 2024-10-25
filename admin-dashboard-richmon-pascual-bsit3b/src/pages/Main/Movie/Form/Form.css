@@ -1,7 +1,8 @@
 .searched-movie {
-  max-height: 200px;
+  max-height: 80px;
   overflow-y: auto;
 }
+
 .search-container p:hover {
   background-color: lightblue;
 }
@@ -10,3 +11,6 @@
   width: 150px;
   height: auto;
 }
+
+
+

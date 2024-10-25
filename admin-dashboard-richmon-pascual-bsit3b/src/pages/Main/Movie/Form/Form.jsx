@@ -1,13 +1,17 @@
 import axios from 'axios';
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './Form.css';
+
 const Form = () => {
   const [query, setQuery] = useState('');
   const [searchedMovieList, setSearchedMovieList] = useState([]);
   const [selectedMovie, setSelectedMovie] = useState(undefined);
-  const [movie, setMovie] = useState(undefined);
+  const [movie, setMovie] = useState({});
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
   let { movieId } = useParams();
+  const accessToken = localStorage.getItem('accessToken');
 
   const handleSearch = useCallback(() => {
     axios({
@@ -26,9 +30,19 @@ const Form = () => {
 
   const handleSelectMovie = (movie) => {
     setSelectedMovie(movie);
+    setMovie({
+      tmdbId: movie.id,
+      title: movie.original_title,
+      overview: movie.overview,
+      popularity: movie.popularity,
+      releaseDate: movie.release_date,
+      voteAverage: movie.vote_average,
+      backdropPath: movie.backdrop_path,
+      posterPath: movie.poster_path,
+    });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const accessToken = localStorage.getItem('accessToken');
     console.log(accessToken);
     if (selectedMovie === undefined) {
@@ -44,7 +58,7 @@ const Form = () => {
         voteAverage: selectedMovie.vote_average,
         backdropPath: `https://image.tmdb.org/t/p/original/${selectedMovie.backdrop_path}`,
         posterPath: `https://image.tmdb.org/t/p/original/${selectedMovie.poster_path}`,
-        isFeatured: 0,
+        isFeatured: selectedMovie.isFeatured ? 1 : 0,
       };
 
       const request = axios({
@@ -58,13 +72,49 @@ const Form = () => {
         .then((saveResponse) => {
           console.log(saveResponse);
           alert('Success');
+          navigate('/main/movies');
         })
         .catch((error) => console.log(error));
     }
   };
 
-  //create a form change/validation
-  //create a new handler for update
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setMovie((prevMovie) => ({
+      ...prevMovie,
+      [name]: value,
+    }));
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: '', // Clear the specific field error if it exists
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!movie.title?.trim()) newErrors.title = 'Title is required';
+    if (!movie.overview?.trim()) newErrors.overview = 'Overview is required';
+    if (!movie.releaseDate) newErrors.releaseDate = 'Release date is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleUpdate = async () => {
+    if (!validateForm()) return;
+    try {
+      await axios.patch(`/movies/${movieId}`, movie, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      alert('Movie details updated successfully');
+      navigate('/main/movies');
+    } catch (error) {
+      console.error('Error updating movie details:', error);
+      alert('Failed to update movie details. Please try again.');
+    }
+  };
+
   useEffect(() => {
     if (movieId) {
       axios.get(`/movies/${movieId}`).then((response) => {
@@ -86,32 +136,31 @@ const Form = () => {
 
   return (
     <>
-      <h1>{movieId !== undefined ? 'Edit ' : 'Create '} Movie</h1>
+      <h1>{movieId ? 'Edit' : 'Create'} Movie</h1>
 
       {movieId === undefined && (
         <>
           <div className='search-container'>
-            Search Movie:{' '}
+            Search Movie:
             <input
-              type='text'
-              onChange={(event) => setQuery(event.target.value)}
+              type='text' onChange={(e) => setQuery(e.target.value)}
             />
             <button type='button' onClick={handleSearch}>
               Search
             </button>
             <div className='searched-movie'>
               {searchedMovieList.map((movie) => (
-                <p onClick={() => handleSelectMovie(movie)}>
+                <p key={movie.id} onClick={() => handleSelectMovie(movie)}>
                   {movie.original_title}
                 </p>
               ))}
             </div>
           </div>
-          <hr />
+          
         </>
       )}
-
-      <div className='container'>
+      <hr />
+      <div className='movie-container'>
         <form>
           {selectedMovie ? (
             <img
@@ -125,14 +174,19 @@ const Form = () => {
             Title:
             <input
               type='text'
-              value={selectedMovie ? selectedMovie.original_title : ''}
+              name='title'
+              value={movie.title || ''} 
+              onChange={handleChange}
             />
+            {errors.title && <span className='error'>{errors.title}</span>}
           </div>
           <div className='field'>
             Overview:
             <textarea
               rows={10}
-              value={selectedMovie ? selectedMovie.overview : ''}
+              name='overview'
+              value={movie.overview || ''}
+              onChange={handleChange}
             />
           </div>
 
@@ -140,7 +194,9 @@ const Form = () => {
             Popularity:
             <input
               type='text'
-              value={selectedMovie ? selectedMovie.popularity : ''}
+              name='popularity'
+              value={movie.popularity || ''}
+              onChange={handleChange}
             />
           </div>
 
@@ -148,7 +204,9 @@ const Form = () => {
             Release Date:
             <input
               type='text'
-              value={selectedMovie ? selectedMovie.release_date : ''}
+              name='releaseDate'
+              value={movie.releaseDate || ''}
+              onChange={handleChange}
             />
           </div>
 
@@ -156,13 +214,20 @@ const Form = () => {
             Vote Average:
             <input
               type='text'
-              value={selectedMovie ? selectedMovie.vote_average : ''}
+              name='voteAverage'
+              value={movie.voteAverage || ''}
+              onChange={handleChange}
             />
           </div>
-
-          <button type='button' onClick={handleSave}>
+          
+          <div className='butt'>
+          <button  type='button' onClick={handleSave}>
             Save
           </button>
+          <button type='button' onClick={handleUpdate}>
+            Update
+          </button>
+          </div>
         </form>
       </div>
     </>

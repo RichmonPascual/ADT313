@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import './Register.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 function Register() {
   const [email, setEmail] = useState('');
@@ -189,9 +190,9 @@ function Register() {
               </button>
             </div>
             <div className='login-container'>
-              <a href='/login'>
-                <small>Already have an account? Login</small>
-              </a>
+            <Link to ="/">
+                <small>Don't have an account? Login</small>
+              </Link>
             </div>
           </div>
         </form>
